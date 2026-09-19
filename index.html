@@ -9,3 +9,99 @@
     <p>Welcome! Submit your IT ticket below.</p>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT SOS - Support System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        input, textarea, button { width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .ticket { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>IT SOS Support System</h1>
+        
+        <!-- فرم ثبت تیکت جدید -->
+        <h2>Submit a New Ticket</h2>
+        <form id="ticketForm">
+            <input type="text" id="title" placeholder="Issue Title (e.g., Broken Monitor)" required>
+            <textarea id="description" placeholder="Description of the issue..." required></textarea>
+            <button type="submit">Submit Ticket</button>
+        </form>
+
+        <hr>
+
+        <!-- محل نمایش تیکت‌ها -->
+        <h2>Active Tickets</h2>
+        <div id="ticketList">Loading tickets...</div>
+    </div>
+
+    <script>
+        const API_URL = '/api/tickets';
+
+        // ۱. دریافت و نمایش تیکت‌ها از بک‌اند (GET)
+        async function fetchTickets() {
+            try {
+                const response = await fetch(API_URL);
+                const tickets = await response.json();
+                
+                const ticketList = document.getElementById('ticketList');
+                ticketList.innerHTML = '';
+
+                if (tickets.length === 0) {
+                    ticketList.innerHTML = '<p>No tickets found.</p>';
+                    return;
+                }
+
+                tickets.forEach(ticket => {
+                    const ticketDiv = document.createElement('div');
+                    ticketDiv.className = 'ticket';
+                    ticketDiv.innerHTML = `
+                        <strong>[#${ticket.id}] ${ticket.title}</strong> - Status: <em>${ticket.status}</em>
+                        <p>${ticket.description}</p>
+                    `;
+                    ticketList.appendChild(ticketDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching tickets:', error);
+            }
+        }
+
+        // ۲. ارسال تیکت جدید به بک‌اند (POST)
+        document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description })
+                });
+
+                if (response.ok) {
+                    document.getElementById('title').value = '';
+                    document.getElementById('description').value = '';
+                    fetchTickets(); // به‌روزرسانی لیست تیکت‌ها
+                }
+            } catch (error) {
+                console.error('Error creating ticket:', error);
+            }
+        });
+
+        // بارگذاری اولیه تیکت‌ها هنگام باز شدن صفحه
+        fetchTickets();
+    </script>
+</body>
+</html>
